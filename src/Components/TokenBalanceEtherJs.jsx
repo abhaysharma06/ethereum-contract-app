@@ -36,7 +36,7 @@ const TokenBalanceEtherJs = () => {
   return (
     <div className="max-w-2xl mx-auto mt-10">
       <h1 className="text-3xl font-semibold text-gray-900 mb-4 text-center">
-        ERC20 Token Balance
+        ERC20 Token Balance (ether.js)
       </h1>
       <div className="bg-zinc-200 shadow-md rounded-3xl px-8 pt-12 pb-8 mb-4">
         <div className="mb-4">

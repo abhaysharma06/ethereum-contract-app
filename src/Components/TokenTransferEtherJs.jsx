@@ -3,8 +3,6 @@ import { ethers } from "ethers";
 import ErrorMessage from "../utils/ErrorMessage";
 import TxList from "../utils/TxList";
 
-const userContractAddress = "0x16286cB5C96851f23BDC6e316Ad1878D18c8bAC9";
-
 const startPayment = async ({ setError, setTxs, ether, addr }) => {
   try {
     if (!window.ethereum)
@@ -45,7 +43,7 @@ const PaymentForm = ({ isEther }) => {
   return (
     <div className="max-w-2xl mx-auto mt-10 mb-10">
       <h1 className="text-3xl font-semibold text-gray-900 mb-8 text-center">
-        Transfer ERC20 Tokens
+        Transfer ERC20 Tokens (ether.js)
       </h1>
       <div className="bg-zinc-200 shadow-md rounded-3xl px-8 pt-12 pb-8 mb-4">
         <div className="mb-4">

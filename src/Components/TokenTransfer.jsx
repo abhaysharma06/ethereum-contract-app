@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import Web3 from "web3";
 import ErrorMessage from "../utils/ErrorMessage.js";
 import TxList from "../utils/TxList.js";
-import erc20ABI from "../Contracts/ERC20ABI.json"; // Make sure this is the correct ABI
+import erc20ABI from "../Contracts/ABI.json"; // Make sure this is the correct ABI
 import { checkBalance } from "./TokenBalance.jsx";
 
 const web3 = new Web3(window.ethereum);
-const userContractAddress = "0x16286cB5C96851f23BDC6e316Ad1878D18c8bAC9";
+const userContractAddress = "0xFEFC83C6741E81Fc2Ad52A9CE77360E3F4f23397";
 
 const startPayment = async ({ setError, setTxs, tokenAmount, addr }) => {
   try {
@@ -19,16 +19,22 @@ const startPayment = async ({ setError, setTxs, tokenAmount, addr }) => {
     const accounts = await web3.eth.getAccounts();
     const senderAddress = accounts[0];
     const recipientAddress = web3.utils.toChecksumAddress(addr);
-    const contract = new web3.eth.Contract(erc20ABI, userContractAddress);
+    const contract = new web3.eth.Contract(
+      erc20ABI,
+      "0xb3D038fB4B08D33aBB3E0B78CAE92C6F4658AFcC"
+    );
 
     const amountWei = web3.utils.toWei(tokenAmount, "ether");
+
+    // Fetching the current gas price from the network
+    const gasPrice = await web3.eth.getGasPrice();
 
     const tx = await contract.methods
       .transfer(recipientAddress, amountWei.toString())
       .send({
         from: senderAddress,
-        gas: 200000, // Adjust gas limit as needed
-        gasPrice: "10000000", // Adjust gas price as needed
+        gasPrice, // Use the gas price recommended by the network
+        gasLimit: 100000,
       });
 
     setTxs([tx]);
@@ -36,6 +42,38 @@ const startPayment = async ({ setError, setTxs, tokenAmount, addr }) => {
     setError(err.message);
   }
 };
+
+// const startPayment = async ({ setError, setTxs, tokenAmount, addr }) => {
+//   try {
+//     setError("");
+//     if (!window.ethereum)
+//       throw new Error("No crypto wallet found. Please install it.");
+
+//     await window.ethereum.send("eth_requestAccounts");
+
+//     const accounts = await web3.eth.getAccounts();
+//     const senderAddress = accounts[0];
+//     const recipientAddress = web3.utils.toChecksumAddress(addr);
+//     const contract = new web3.eth.Contract(
+//       erc20ABI,
+//       "0xb3D038fB4B08D33aBB3E0B78CAE92C6F4658AFcC"
+//     );
+
+//     const amountWei = web3.utils.toWei(tokenAmount, "ether");
+
+//     const tx = await contract.methods
+//       .transfer(recipientAddress, amountWei.toString())
+//       .send({
+//         from: senderAddress,
+//         gasPrice: 250000000000,
+//         gasLimit: 30000,
+//       });
+
+//     setTxs([tx]);
+//   } catch (err) {
+//     setError(err.message);
+//   }
+// };
 
 const TokenTransfer = () => {
   const [error, setError] = useState();
@@ -55,14 +93,16 @@ const TokenTransfer = () => {
       addr: userContractAddress,
     });
 
-    if (
-      !tokenAmount ||
-      isNaN(parseFloat(tokenAmount)) ||
-      parseFloat(tokenAmount) <= 0 ||
-      !(tokenAmount < ethBalance)
-    ) {
-      setError("Insufficient amount to send");
-      return;
+    if (ethBalance) {
+      if (
+        !tokenAmount ||
+        isNaN(parseFloat(tokenAmount)) ||
+        parseFloat(tokenAmount) <= 0 ||
+        !(tokenAmount < ethBalance)
+      ) {
+        setError("Insufficient amount to send");
+        return;
+      }
     }
 
     if (!addr || !web3.utils.isAddress(addr)) {
@@ -83,7 +123,7 @@ const TokenTransfer = () => {
   return (
     <div className="max-w-2xl mx-auto mt-10 mb-10">
       <h1 className="text-3xl font-semibold text-gray-900 mb-8 text-center">
-        Transfer ERC20 Tokens
+        Transfer ERC20 Tokens (Web3.js)
       </h1>
       <div className="bg-zinc-200 shadow-md rounded-3xl px-8 pt-12 pb-8 mb-4">
         <div className="mb-4">
