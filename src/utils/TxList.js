@@ -1,4 +1,4 @@
-export default function TxList({ txs }) {
+export default function TxList({ txs, flag }) {
   if (txs.length === 0) return null;
 
   return (
@@ -7,7 +7,7 @@ export default function TxList({ txs }) {
         <div key={item} className="alert alert-info mt-5">
           <div className="flex-1">
             <label className="text-green-600">
-              TransactionHash : {item.transactionHash}
+              TransactionHash : {flag ? item.hash : item.transactionHash}
             </label>
           </div>
         </div>

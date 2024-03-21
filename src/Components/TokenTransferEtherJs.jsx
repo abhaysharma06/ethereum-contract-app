@@ -1,82 +1,44 @@
 import React, { useState } from "react";
-import Web3 from "web3";
-import ErrorMessage from "../utils/ErrorMessage.js";
-import TxList from "../utils/TxList.js";
-import erc20ABI from "../Contracts/ERC20ABI.json"; // Make sure this is the correct ABI
-import { checkBalance } from "./TokenBalance.jsx";
+import { ethers } from "ethers";
+import ErrorMessage from "../utils/ErrorMessage";
+import TxList from "../utils/TxList";
 
-const web3 = new Web3(window.ethereum);
 const userContractAddress = "0x16286cB5C96851f23BDC6e316Ad1878D18c8bAC9";
 
-const startPayment = async ({ setError, setTxs, tokenAmount, addr }) => {
+const startPayment = async ({ setError, setTxs, ether, addr }) => {
   try {
-    setError("");
     if (!window.ethereum)
       throw new Error("No crypto wallet found. Please install it.");
 
     await window.ethereum.send("eth_requestAccounts");
-
-    const accounts = await web3.eth.getAccounts();
-    const senderAddress = accounts[0];
-    const recipientAddress = web3.utils.toChecksumAddress(addr);
-    const contract = new web3.eth.Contract(erc20ABI, userContractAddress);
-
-    const amountWei = web3.utils.toWei(tokenAmount, "ether");
-
-    const tx = await contract.methods
-      .transfer(recipientAddress, amountWei.toString())
-      .send({
-        from: senderAddress,
-        gas: 200000, // Adjust gas limit as needed
-        gasPrice: "10000000", // Adjust gas price as needed
-      });
-
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    ethers.utils.getAddress(addr);
+    const tx = await signer.sendTransaction({
+      to: addr,
+      value: ethers.utils.parseEther(ether),
+    });
+    console.log({ ether, addr });
+    console.log("tx", tx);
     setTxs([tx]);
   } catch (err) {
     setError(err.message);
   }
 };
 
-const TokenTransfer = () => {
+const PaymentForm = ({ isEther }) => {
   const [error, setError] = useState();
   const [txs, setTxs] = useState([]);
-  const [ethBalance, setEthBalance] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData(e.target);
-    const tokenAmount = data.get("tokenAmount");
-    const addr = data.get("addr");
-
-    // Check if transfer token amount is greater than the available balance
-    await checkBalance({
-      setError,
-      setEthBalance,
-      addr: userContractAddress,
-    });
-
-    if (
-      !tokenAmount ||
-      isNaN(parseFloat(tokenAmount)) ||
-      parseFloat(tokenAmount) <= 0 ||
-      !(tokenAmount < ethBalance)
-    ) {
-      setError("Insufficient amount to send");
-      return;
-    }
-
-    if (!addr || !web3.utils.isAddress(addr)) {
-      setError("Please enter a valid Ethereum address");
-      return;
-    }
-
+    setError();
     await startPayment({
       setError,
       setTxs,
-      tokenAmount,
-      addr,
-      setEthBalance,
-      ethBalance,
+      ether: data.get("tokenAmount"),
+      addr: data.get("addr"),
     });
   };
 
@@ -128,11 +90,11 @@ const TokenTransfer = () => {
             </button>
           </form>
           <ErrorMessage message={error} />
-          <TxList txs={txs} />
+          <TxList txs={txs} flag={true} />
         </div>
       </div>
     </div>
   );
 };
 
-export default TokenTransfer;
+export default PaymentForm;
